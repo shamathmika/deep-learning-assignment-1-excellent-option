@@ -1,6 +1,6 @@
 # CMPE 258 — Homework 1 Excellent: CUDA Core vs Tensor Core GEMM Benchmark
 
-Measures and explains the performance difference between a **traditional CUDA-core FP32 GEMM** path and a **modern Tensor Core TF32 GEMM** path using a simple fully connected layer.
+Measures and explains the performance difference between a **traditional CUDA-core FP32 GEMM** path and a **Tensor Core** GEMM path using a simple fully connected layer.
 
 ## Run in Google Colab
 
@@ -12,8 +12,8 @@ Measures and explains the performance difference between a **traditional CUDA-co
 
 The notebook (`gemm_benchmark.ipynb`) benchmarks GEMM (General Matrix Multiply) across two frameworks and two precision modes:
 
-| Framework | FP32 Baseline (CUDA Cores) | TF32 / Tensor Core Path |
-|-----------|---------------------------|------------------------|
+| Framework | FP32 Baseline (CUDA Cores) | Tensor Core Path |
+|-----------|---------------------------|-----------------|
 | **PyTorch** | `nn.Linear` with `allow_tf32=False` | `nn.Linear` with `allow_tf32=True` |
 | **cuBLAS (CUDA C++)** | `cublasSgemm` | `cublasGemmEx` with `CUBLAS_COMPUTE_32F_FAST_16F` |
 
@@ -23,25 +23,34 @@ The notebook (`gemm_benchmark.ipynb`) benchmarks GEMM (General Matrix Multiply) 
 - **Warmup:** 50 iterations
 - **Timed:** 200 iterations per configuration
 - **Timing:** GPU-side events (`torch.cuda.Event` / `cudaEventElapsedTime`)
-- **Target GPU:** NVIDIA T4 (Turing, sm_75, Tensor Cores)
+- **Target GPU:** NVIDIA T4 (Turing, sm_75)
 
-### Generated Plots (saved to `outputs/gemm_benchmark/`)
+### Important Note on T4 and TF32
 
-1. **Latency comparison** — log-log plot of all 4 series
-2. **GFLOPS throughput** — with T4 FP32 peak line at 8.1 TFLOPS
-3. **Speedup bar chart** — TF32/FP32 ratio per matrix size
-4. **Combined roofline overview** — latency + throughput side-by-side
+The T4 (Turing) has Tensor Cores but **does not support TF32** — that is an Ampere (sm_80+) feature. On T4:
+- PyTorch's `allow_tf32` flag has **no effect** — both modes produce identical results
+- The cuBLAS benchmark uses `CUBLAS_COMPUTE_32F_FAST_16F`, which leverages T4's **FP16 Tensor Cores** (FP32 inputs → FP16 multiply → FP32 accumulate)
 
-### Analysis Covers
+This means the real Tensor Core speedup is visible only in the cuBLAS results.
 
-- Why small matrices don't benefit from Tensor Cores
-- At what size the Tensor Core advantage kicks in
-- PyTorch overhead vs raw cuBLAS
-- TF32 precision trade-off (10-bit mantissa vs 23-bit FP32)
+## Results
+
+### Latency Comparison
+![Latency Comparison](outputs/gemm_benchmark/1_latency_comparison.png)
+
+### GFLOPS Throughput
+![GFLOPS Throughput](outputs/gemm_benchmark/2_gflops_throughput.png)
+
+### Speedup (Tensor Core / FP32)
+![Speedup](outputs/gemm_benchmark/3_speedup_barchart.png)
+
+### Combined Overview
+![Combined Overview](outputs/gemm_benchmark/4_combined_overview.png)
 
 ## How to Run
 
 1. Click the **Open in Colab** badge above
 2. Set runtime to **T4 GPU**
 3. Run all cells (Runtime → Run all)
-4. Results and plots will be generated inline and saved to `outputs/gemm_benchmark/`
+4. Results and plots are generated inline and saved to `outputs/gemm_benchmark/`
+5. Optionally, use the "Push notebook + plots to GitHub" cell to commit the executed notebook and plots directly from Colab
