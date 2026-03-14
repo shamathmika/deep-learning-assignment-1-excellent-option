@@ -27,11 +27,9 @@ The notebook (`gemm_benchmark.ipynb`) benchmarks GEMM (General Matrix Multiply) 
 
 ### Important Note on T4 and TF32
 
-The T4 (Turing) has Tensor Cores but **does not support TF32** — that is an Ampere (sm_80+) feature. On T4:
-- PyTorch's `allow_tf32` flag has **no effect** — both modes produce identical results
-- The cuBLAS benchmark uses `CUBLAS_COMPUTE_32F_FAST_16F`, which leverages T4's **FP16 Tensor Cores** (FP32 inputs → FP16 multiply → FP32 accumulate)
-
-This means the real Tensor Core speedup is visible only in the cuBLAS results.
+The T4 (Turing) has Tensor Cores but **does not natively support TF32** — that is an Ampere (sm_80+) feature. On T4:
+- PyTorch's `allow_tf32` flag shows **inconsistent speedup** — faster at mid-sizes (1.33x at 1024) but slightly slower at small/large sizes, suggesting PyTorch 2.10+ may route through a reduced-precision path on Turing
+- The cuBLAS benchmark uses `CUBLAS_COMPUTE_32F_FAST_16F`, which leverages T4's **FP16 Tensor Cores** (FP32 inputs → FP16 multiply → FP32 accumulate) and shows **consistent 1.5–2.8x speedup**
 
 ## Results
 
