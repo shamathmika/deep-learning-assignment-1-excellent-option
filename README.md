@@ -1,6 +1,6 @@
 # CMPE 258 — Homework 1 Excellent: CUDA Core vs Tensor Core GEMM Benchmark
 
-Benchmarks FP32 GEMM (CUDA cores) vs Tensor Core GEMM on an NVIDIA T4, using both PyTorch and raw cuBLAS.
+Benchmarks FP32 GEMM (CUDA cores) against Tensor Core GEMM on an NVIDIA T4, using both PyTorch and raw cuBLAS.
 
 ## Run in Google Colab
 
@@ -17,13 +17,13 @@ The notebook benchmarks GEMM across two frameworks and two precision modes:
 | PyTorch | `nn.Linear` with `allow_tf32=False` | `nn.Linear` with `allow_tf32=True` |
 | cuBLAS (CUDA C++) | `cublasSgemm` | `cublasGemmEx` with `CUBLAS_COMPUTE_32F_FAST_16F` |
 
-**Setup:** Square matrices (M=K=N) at sizes 256–8192, 50 warmup + 200 timed iterations, GPU-side event timing, on T4 (sm_75).
+**Setup:** Square matrices (M=K=N) at sizes 256-8192, 50 warmup + 200 timed iterations, GPU-side event timing, on T4 (sm_75).
 
 ### T4 and TF32
 
-The T4 doesn't support TF32 natively (that's Ampere sm_80+). On T4:
-- PyTorch's `allow_tf32` gives inconsistent speedup. i.e, it helps at mid-sizes (1.21x at 1024) but is slower at extremes (0.87x at 8192)
-- cuBLAS with `CUBLAS_COMPUTE_32F_FAST_16F` uses FP16 Tensor Cores (FP32 in → FP16 multiply → FP32 accumulate) and gives consistent 1.52-2.81x speedup
+The T4 does not support TF32 natively (requires Ampere sm_80+). On T4:
+- PyTorch `allow_tf32` produces inconsistent speedup, i.e., it helps at mid-sizes (1.21x at 1024) but is slower at extremes (0.87x at 8192)
+- cuBLAS with `CUBLAS_COMPUTE_32F_FAST_16F` uses FP16 Tensor Cores (FP32 in → FP16 multiply → FP32 accumulate) and provides consistent 1.52-2.81x speedup
 
 ## Results
 
