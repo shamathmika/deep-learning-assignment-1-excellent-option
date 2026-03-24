@@ -22,8 +22,8 @@ The notebook benchmarks GEMM across two frameworks and two precision modes:
 ### T4 and TF32
 
 The T4 doesn't support TF32 natively (that's Ampere sm_80+). On T4:
-- PyTorch's `allow_tf32` gives inconsistent speedup. i.e, it helps at mid-sizes but not at extremes
-- cuBLAS with `CUBLAS_COMPUTE_32F_FAST_16F` uses FP16 Tensor Cores (FP32 in → FP16 multiply → FP32 accumulate) and gives consistent 1.5–2.8x speedup
+- PyTorch's `allow_tf32` gives inconsistent speedup. i.e, it helps at mid-sizes (1.21x at 1024) but is slower at extremes (0.87x at 8192)
+- cuBLAS with `CUBLAS_COMPUTE_32F_FAST_16F` uses FP16 Tensor Cores (FP32 in → FP16 multiply → FP32 accumulate) and gives consistent 1.52-2.81x speedup
 
 ## Results
 
